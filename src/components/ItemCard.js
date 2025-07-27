@@ -17,7 +17,7 @@ function SwapSymbol() {
   );
 }
 
-export default function ItemCard({ item, isOwn, onAddToCart, onOfferExchange, onOfferFullPrice, onOfferBoth }) {
+export default function ItemCard({ item, isOwn, onAddToCart, onOfferExchange, onOfferFullPrice }) {
   const navigate = useNavigate();
   const { addToCart, cartItems } = useCart();
   const [liked, setLiked] = useState(false);
@@ -85,12 +85,7 @@ export default function ItemCard({ item, isOwn, onAddToCart, onOfferExchange, on
     }
   };
 
-  const handleOfferBoth = () => {
-    if (onOfferBoth) {
-      onOfferBoth(item);
-      navigate('/exchange');
-    }
-  };
+  // Removed unused handleOfferBoth function
 
   const handleViewCart = () => {
     navigate('/cart');
@@ -102,7 +97,11 @@ export default function ItemCard({ item, isOwn, onAddToCart, onOfferExchange, on
   };
 
   return (
-    <div className="card item-card">
+    <div 
+      className="card item-card" 
+      style={{ cursor: 'pointer' }}
+      onClick={() => navigate(`/product/${item.id}`)}
+    >
       <div className="item-badges">
         {badges.map(badge => (
           <span key={badge} className={`item-badge ${badge}`}>{badge}</span>
