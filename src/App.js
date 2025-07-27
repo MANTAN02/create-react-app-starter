@@ -1,95 +1,96 @@
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './AuthContext';
+import { CartProvider } from './components/CartContext';
+import EnhancedHeader from './components/EnhancedHeader';
+import EnhancedItemCard from './components/EnhancedItemCard';
+import BrowsePage from './pages/BrowsePage';
+import CartPage from './pages/CartPage';
+import DeliveryPage from './pages/DeliveryPage';
+import ExchangePage from './pages/ExchangePage';
+import ExchangeOfferPage from './pages/ExchangeOfferPage';
+import ListItemPage from './pages/ListItemPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import UserProfilePage from './pages/UserProfilePage';
+import UpdatesPage from './pages/UpdatesPage';
+import './index.css';
 
-import React, { useState, useRef, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
-import ListItemPage from "./pages/ListItemPage";
-import BrowsePage from "./pages/BrowsePage";
-import DeliveryPage from "./pages/DeliveryPage";
-import ExchangePage from "./pages/ExchangePage";
-import ExchangeOfferPage from "./pages/ExchangeOfferPage";
-import UserProfilePage from "./pages/UserProfilePage";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import CartPage from "./pages/CartPage";
-import UpdatesPage from "./pages/UpdatesPage";
-import Header from "./components/Header";
-import { AuthProvider, useAuth } from "./AuthContext";
-import { CartProvider } from "./components/CartContext";
-import "./styles.css";
-import { initialItems } from './pages/BrowsePage';
-import { FaBars, FaUser, FaBell, FaStore, FaList, FaHeart, FaCog, FaSignOutAlt, FaShoppingCart } from 'react-icons/fa';
+const App = () => {
+  const [search, setSearch] = useState("");
+  const [items, setItems] = useState([]);
 
-const CATEGORY_SUGGESTIONS = Array.from(
-  new Set(initialItems.map(item => item.category))
-).sort();
-
-function CenteredSearchBar({ searchValue, onSearchChange }) {
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const searchRef = useRef();
-  const navigate = useNavigate();
-
+  // Mock data for demonstration
   useEffect(() => {
-    if (searchValue && searchValue.length > 0) {
-      const filtered = CATEGORY_SUGGESTIONS.filter(cat =>
-        cat.toLowerCase().includes(searchValue.toLowerCase())
-      );
-      setSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
-      setHighlightedIndex(-1);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      setHighlightedIndex(-1);
-    }
-  }, [searchValue]);
+    const mockItems = [
+      {
+        id: 1,
+        title: "Vintage Camera",
+        price: 299,
+        category: "Electronics",
+        description: "Beautiful vintage camera in excellent condition",
+        image: "https://via.placeholder.com/300x200",
+        location: "New York",
+        rating: 4.5,
+        reviewCount: 12,
+        isNew: true,
+        postedAt: "2 days ago"
+      },
+      {
+        id: 2,
+        title: "Designer Watch",
+        price: 599,
+        category: "Fashion",
+        description: "Luxury designer watch with original box",
+        image: "https://via.placeholder.com/300x200",
+        location: "Los Angeles",
+        rating: 4.8,
+        reviewCount: 25,
+        isFeatured: true,
+        postedAt: "1 week ago"
+      },
+      {
+        id: 3,
+        title: "Gaming Laptop",
+        price: 899,
+        category: "Electronics",
+        description: "High-performance gaming laptop with warranty",
+        image: "https://via.placeholder.com/300x200",
+        location: "Chicago",
+        rating: 4.2,
+        reviewCount: 8,
+        postedAt: "3 days ago"
+      }
+    ];
+    setItems(mockItems);
+  }, []);
 
-  function handleInputChange(e) {
-    onSearchChange(e.target.value);
-  }
-
-  function handleSuggestionClick(suggestion) {
-    onSearchChange(suggestion);
-    setShowSuggestions(false);
-    navigate('/browse', { state: { searchCategory: suggestion } });
-  }
-
-  function handleInputKeyDown(e) {
-    if (!showSuggestions) return;
-    if (e.key === "ArrowDown") {
-      setHighlightedIndex(i => Math.min(i + 1, suggestions.length - 1));
-    } else if (e.key === "ArrowUp") {
-      setHighlightedIndex(i => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      onSearchChange(suggestions[highlightedIndex]);
-      setShowSuggestions(false);
-      navigate('/browse', { state: { searchCategory: suggestions[highlightedIndex] } });
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
-    }
-  }
-
-  function highlightMatch(text, query) {
-    if (!query) return text;
-    const idx = text.toLowerCase().indexOf(query.toLowerCase());
-    if (idx === -1) return text;
-    return <>{text.slice(0, idx)}<span className="highlight-match-bold">{text.slice(idx, idx + query.length)}</span>{text.slice(idx + query.length)}</>;
-  }
-
-  function handleSearchIconClick() {
-    const category = CATEGORY_SUGGESTIONS.find(cat =>
-      cat.toLowerCase() === searchValue.toLowerCase()
-    );
-    navigate('/browse', { state: { searchCategory: category || searchValue } });
-  }
+  const ProtectedRoute = ({ children }) => {
+    const { user } = useAuth();
+    return user ? children : <Navigate to="/login" />;
+  };
 
   return (
-    <div className="centered-search-bar-container">
-      <div className="centered-search-bar" ref={searchRef}>
-        <input
-          type="text"
-          value={searchValue}
-          onChange={handleInputChange}
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <EnhancedHeader searchValue={search} onSearchChange={setSearch} />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <Routes>
+                <Route path="/" element={<BrowsePage items={items} search={search} />} />
+                <Route path="/browse" element={<BrowsePage items={items} search={search} />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/list" element={<ProtectedRoute><ListItemPage /></ProtectedRoute>} />
+                <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+                <Route path="/product/:id" element={<ProductDetailPage />} />
+                <Route path="/exchange/:id" element={<ProtectedRoute><ExchangePage /></ProtectedRoute>} />
+                <Route path="/delivery/:id" element={<ProtectedRoute><DeliveryPage /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
+                <Route path="/updates" element={<ProtectedRoute><UpdatesPage /></ProtectedRoute>} />
+                <Route path="/exchange-offers" element={<ProtectedRoute><ExchangeOfferPage /></ProtectedRoute>} />
           onFocus={() => setShowSuggestions(suggestions.length > 0)}
           onKeyDown={handleInputKeyDown}
           placeholder="Search by category..."
@@ -121,29 +122,6 @@ function CenteredSearchBar({ searchValue, onSearchChange }) {
 }
 
 
-function OffersPage() {
-  return <div className="sidebar-landing-page">Your Offers and Transactions</div>;
-}
-function MyProfilePage() {
-  return <div className="sidebar-landing-page">My Profile Page (View/Edit your info)</div>;
-}
-function NotificationsPage() {
-  return <div className="sidebar-landing-page">Notifications Page (All your alerts)</div>;
-}
-function ShopPagesPage() {
-  return <div className="sidebar-landing-page">Shop Pages (Browse by shop or category)</div>;
-}
-function AllPagesPage() {
-  return <div className="sidebar-landing-page">All Pages (Site map or feature list)</div>;
-}
-function MyWishlistPage() {
-  return <div className="sidebar-landing-page">My Wishlist (Your saved items)</div>;
-}
-function SettingsPage() {
-  return <div className="sidebar-landing-page">Settings (Account preferences)</div>;
-}
-// CartPage is now imported from separate file
-
 function Sidebar({ open, onClose }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -171,13 +149,14 @@ function Sidebar({ open, onClose }) {
           <div className="sidebar-profile-balance">Current Balance $99</div>
         </div>
         <ul className="sidebar-menu">
+          <li onClick={() => handleNav('/cart')}><FaShoppingCart className="sidebar-icon" /> My Cart</li>
           <li onClick={() => handleNav('/my-profile')}><FaUser className="sidebar-icon" /> My Profile</li>
+          <li onClick={() => handleNav('/updates')}><FaCog className="sidebar-icon" /> Account Settings</li>
           <li onClick={() => handleNav('/notifications')}><FaBell className="sidebar-icon" /> Notifications <span className="sidebar-badge">3</span></li>
           <li onClick={() => handleNav('/shop-pages')}><FaStore className="sidebar-icon" /> Shop Pages</li>
           <li onClick={() => handleNav('/all-pages')}><FaList className="sidebar-icon" /> All Pages</li>
           <li onClick={() => handleNav('/my-wishlist')}><FaHeart className="sidebar-icon" /> My Wishlist</li>
           <li onClick={() => handleNav('/my-listings')}><FaList className="sidebar-icon" /> My Listings</li>
-          <li onClick={() => handleNav('/settings')}><FaCog className="sidebar-icon" /> Settings</li>
           <li onClick={handleSignOut}><FaSignOutAlt className="sidebar-icon" /> Sign Out</li>
         </ul>
       </div>
@@ -196,14 +175,33 @@ function ProtectedRoute({ children }) {
 
 
 
+function MyProfilePage() {
+  return <div className="sidebar-landing-page">My Profile Page (View/Edit your info)</div>;
+}
+
+function NotificationsPage() {
+  return <div className="sidebar-landing-page">Notifications Page (All your alerts)</div>;
+}
+
+function ShopPagesPage() {
+  return <div className="sidebar-landing-page">Shop Pages (Browse by shop or category)</div>;
+}
+
+function AllPagesPage() {
+  return <div className="sidebar-landing-page">All Pages (Site map or feature list)</div>;
+}
+
+function MyWishlistPage() {
+  return <div className="sidebar-landing-page">My Wishlist (Your saved items)</div>;
+}
+
+function SettingsPage() {
+  return <div className="sidebar-landing-page">Settings (Account preferences)</div>;
+}
+
 function MyListingsPage() {
   // Placeholder: show only user's items
   return <div className="sidebar-landing-page">My Listings (Your posted ads will appear here)</div>;
-}
-function ItemDetailsPage() {
-  const { itemId } = useParams();
-  // Placeholder: show details for a single item
-  return <div className="sidebar-landing-page">Item Details for ID: {itemId}</div>;
 }
 
 function App() {
@@ -272,30 +270,33 @@ function App() {
   );
 }
 
-function AppRoutes({ userItems, handleListItem, handlePurchase, handleOfferExchange, handleConfirmExchange, handleAcceptOffer, handleConfirmDelivery, selectedItem, exchangeOffer, search }) {
-  const location = useLocation();
-  return (
-    <Routes>
-      <Route path="/" element={<BrowsePage userItems={userItems} onAddToCart={handlePurchase} onOfferExchange={handleOfferExchange} onOfferFullPrice={handlePurchase} search={search} searchCategory={location.state?.searchCategory} />} />
-      <Route path="/browse" element={<BrowsePage userItems={userItems} onAddToCart={handlePurchase} onOfferExchange={handleOfferExchange} onOfferFullPrice={handlePurchase} search={search} searchCategory={location.state?.searchCategory} />} />
-      <Route path="/list" element={<ListItemPage onSubmit={handleListItem} />} />
-      <Route path="/offers" element={<ProtectedRoute><ExchangeOfferPage offer={exchangeOffer} onAccept={handleAcceptOffer} onDecline={() => {}} /></ProtectedRoute>} />
-      <Route path="/my-profile" element={<MyProfilePage />} />
-      <Route path="/notifications" element={<NotificationsPage />} />
-      <Route path="/shop-pages" element={<ShopPagesPage />} />
-      <Route path="/all-pages" element={<AllPagesPage />} />
-      <Route path="/my-wishlist" element={<MyWishlistPage />} />
-      <Route path="/my-listings" element={<MyListingsPage />} />
-      <Route path="/item/:itemId" element={<ItemDetailsPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
-      <Route path="/cart" element={<CartPage />} />
-      <Route path="/profile" element={<UserProfilePage />} />
-      <Route path="/delivery" element={<ProtectedRoute><DeliveryPage item={selectedItem} onBack={() => {}} onConfirm={handleConfirmDelivery} /></ProtectedRoute>} />
-      <Route path="/exchange" element={<ProtectedRoute><ExchangePage item={selectedItem} yourItems={userItems} onBack={() => {}} onConfirm={handleConfirmExchange} /></ProtectedRoute>} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/login" element={<LoginPage />} />
-    </Routes>
-  );
-}
+  function AppRoutes({ userItems, handleListItem, handlePurchase, handleOfferExchange, handleConfirmExchange, handleAcceptOffer, handleConfirmDelivery, selectedItem, exchangeOffer, search }) {
+    const location = useLocation();
+    const navigate = useNavigate();
+    
+    return (
+      <Routes>
+        <Route path="/" element={<BrowsePage userItems={userItems} onAddToCart={handlePurchase} onOfferExchange={handleOfferExchange} onOfferFullPrice={handlePurchase} search={search} searchCategory={location.state?.searchCategory} />} />
+        <Route path="/browse" element={<BrowsePage userItems={userItems} onAddToCart={handlePurchase} onOfferExchange={handleOfferExchange} onOfferFullPrice={handlePurchase} search={search} searchCategory={location.state?.searchCategory} />} />
+        <Route path="/list" element={<ListItemPage onSubmit={handleListItem} />} />
+        <Route path="/offers" element={<ProtectedRoute><ExchangeOfferPage offer={exchangeOffer} onAccept={handleAcceptOffer} onDecline={() => {}} /></ProtectedRoute>} />
+        <Route path="/my-profile" element={<MyProfilePage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/shop-pages" element={<ShopPagesPage />} />
+        <Route path="/all-pages" element={<AllPagesPage />} />
+        <Route path="/my-wishlist" element={<MyWishlistPage />} />
+        <Route path="/my-listings" element={<MyListingsPage />} />
+        <Route path="/product/:id" element={<ProductDetailPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/updates" element={<ProtectedRoute><UpdatesPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/delivery" element={<ProtectedRoute><DeliveryPage item={selectedItem} onBack={() => navigate('/cart')} onConfirm={handleConfirmDelivery} /></ProtectedRoute>} />
+        <Route path="/exchange" element={<ProtectedRoute><ExchangePage item={selectedItem} yourItems={userItems} onBack={() => navigate('/browse')} onConfirm={handleConfirmExchange} /></ProtectedRoute>} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    );
+  }
 
 export default App;
